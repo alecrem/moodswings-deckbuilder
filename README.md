@@ -63,7 +63,7 @@ python deck_generator.py
 Execute the full test suite:
 
 ```bash
-python -m pytest test_deck_generator.py -v
+python -m pytest -v
 ```
 
 ### Format and Lint

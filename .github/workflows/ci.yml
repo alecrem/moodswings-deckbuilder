@@ -25,4 +25,4 @@ jobs:
         run: ruff check .
 
       - name: Run tests
-        run: python -m pytest test_deck_generator.py -v
+        run: python -m pytest -v
