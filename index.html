@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mood Swings — Deck Builder</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #ffffff;
+        --surface: #f5f5f5;
+        --border: #ddd;
+        --text: #111;
+        --text-dim: #777;
+        --c-white: #b8860b;
+        --c-blue: #0e68ab;
+        --c-black: #6a0dad;
+        --c-red: #c0392b;
+        --c-green: #1a7a3a;
+        --r-common: #666;
+        --r-uncommon: #607080;
+        --r-rare: #b8860b;
+        --r-mythic: #c0520a;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 16px;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 40px 20px 60px;
+      }
+
+      header {
+        margin-bottom: 32px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      .subtitle {
+        margin-top: 4px;
+        font-size: 14px;
+        color: var(--text-dim);
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+
+      .btn-generate {
+        font-size: 15px;
+        font-weight: 600;
+        padding: 10px 24px;
+        background: #111;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .btn-generate:hover {
+        background: #333;
+      }
+      .btn-generate:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .view-toggle {
+        display: none;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+
+      .view-toggle button {
+        background: transparent;
+        border: none;
+        padding: 8px 16px;
+        cursor: pointer;
+        color: var(--text-dim);
+      }
+
+      .view-toggle button.active {
+        background: var(--surface);
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .view-toggle .sep {
+        display: inline-block;
+        width: 1px;
+        background: var(--border);
+        align-self: stretch;
+      }
+
+      .loading {
+        display: none;
+        color: var(--text-dim);
+        font-size: 14px;
+        padding: 32px 0;
+      }
+
+      /* Stats */
+      .deck-stats {
+        display: none;
+        gap: 0;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+        font-size: 13px;
+      }
+
+      .stats-group {
+        display: flex;
+      }
+
+      .stats-divider {
+        width: 1px;
+        background: var(--border);
+      }
+
+      .stat {
+        padding: 10px 16px;
+        text-align: center;
+        border-right: 1px solid var(--border);
+      }
+      .stat:last-child {
+        border-right: none;
+      }
+
+      .stat-num {
+        display: block;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .stat-label {
+        color: var(--text-dim);
+        font-size: 11px;
+      }
+
+      .stat-mythic .stat-num {
+        color: var(--r-mythic);
+      }
+      .stat-rare .stat-num {
+        color: var(--r-rare);
+      }
+      .stat-uncommon .stat-num {
+        color: var(--r-uncommon);
+      }
+      .stat-common .stat-num {
+        color: var(--r-common);
+      }
+
+      @media (max-width: 600px) {
+        .stats-divider {
+          display: none;
+        }
+        .deck-stats {
+          flex-direction: column;
+        }
+        .stats-group {
+          flex-wrap: wrap;
+        }
+      }
+
+      /* Text view */
+      #text-view {
+        display: none;
+      }
+
+      .rarity-section {
+        margin-bottom: 28px;
+      }
+
+      .rarity-header {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid currentColor;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .rarity-pip {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+      }
+
+      .rarity-header.mythic {
+        color: var(--r-mythic);
+      }
+      .rarity-header.rare {
+        color: var(--r-rare);
+      }
+      .rarity-header.uncommon {
+        color: var(--r-uncommon);
+      }
+      .rarity-header.common {
+        color: var(--r-common);
+      }
+
+      .card-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 8px;
+        border-left: 3px solid transparent;
+      }
+      .card-row:hover {
+        background: var(--surface);
+      }
+
+      .card-row.color-White {
+        border-left-color: var(--c-white);
+      }
+      .card-row.color-Blue {
+        border-left-color: var(--c-blue);
+      }
+      .card-row.color-Black {
+        border-left-color: var(--c-black);
+      }
+      .card-row.color-Red {
+        border-left-color: var(--c-red);
+      }
+      .card-row.color-Green {
+        border-left-color: var(--c-green);
+      }
+
+      .card-color-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+      }
+      .color-dot-White {
+        background: #f0d080;
+      }
+      .color-dot-Blue {
+        background: var(--c-blue);
+      }
+      .color-dot-Black {
+        background: var(--c-black);
+      }
+      .color-dot-Red {
+        background: var(--c-red);
+      }
+      .color-dot-Green {
+        background: var(--c-green);
+      }
+
+      .card-name {
+        flex: 1;
+      }
+      .card-color-label {
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      /* Image view */
+      #image-view {
+        display: none;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .card-img-wrap {
+        position: relative;
+        aspect-ratio: 488 / 680;
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+      .card-img-wrap:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .card-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .card-img-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: var(--text-dim);
+        padding: 8px;
+        text-align: center;
+      }
+
+      .card-img-wrap::after {
+        content: attr(data-name);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        font-size: 11px;
+        padding: 16px 6px 6px;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+        transform: translateY(100%);
+        transition: transform 0.15s;
+        text-align: center;
+      }
+      .card-img-wrap:hover::after {
+        transform: translateY(0);
+      }
+
+      .empty-state {
+        padding: 48px 0;
+        color: var(--text-dim);
+        font-size: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Mood Swings Deck Builder</h1>
+        <p class="subtitle">
+          Unofficial tool &mdash; generates a randomized 45-card deck
+        </p>
+      </header>
+
+      <div class="controls">
+        <button class="btn-generate" id="btn-generate">Generate Deck</button>
+        <div class="view-toggle" id="view-toggle">
+          <button class="active" id="btn-text" onclick="setView('text')">
+            List
+          </button>
+          <div class="sep"></div>
+          <button id="btn-images" onclick="setView('images')">Images</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading">Generating deck&hellip;</div>
+
+      <div class="deck-stats" id="deck-stats">
+        <div class="stats-group">
+          <div class="stat stat-mythic">
+            <span class="stat-num" id="stat-mythic">0</span
+            ><span class="stat-label">Mythic Rare</span>
+          </div>
+          <div class="stat stat-rare">
+            <span class="stat-num" id="stat-rare">0</span
+            ><span class="stat-label">Rare</span>
+          </div>
+          <div class="stat stat-uncommon">
+            <span class="stat-num" id="stat-uncommon">0</span
+            ><span class="stat-label">Uncommon</span>
+          </div>
+          <div class="stat stat-common">
+            <span class="stat-num" id="stat-common">0</span
+            ><span class="stat-label">Common</span>
+          </div>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stats-group">
+          <div class="stat">
+            <span
+              class="stat-num stat-color-num"
+              style="color: var(--c-white)"
+              id="stat-White"
+              >0</span
+            ><span class="stat-label">White</span>
+          </div>
+          <div class="stat">
+            <span
+              class="stat-num stat-color-num"
+              style="color: var(--c-blue)"
+              id="stat-Blue"
+              >0</span
+            ><span class="stat-label">Blue</span>
+          </div>
+          <div class="stat">
+            <span
+              class="stat-num stat-color-num"
+              style="color: var(--c-black)"
+              id="stat-Black"
+              >0</span
+            ><span class="stat-label">Black</span>
+          </div>
+          <div class="stat">
+            <span
+              class="stat-num stat-color-num"
+              style="color: var(--c-red)"
+              id="stat-Red"
+              >0</span
+            ><span class="stat-label">Red</span>
+          </div>
+          <div class="stat">
+            <span
+              class="stat-num stat-color-num"
+              style="color: var(--c-green)"
+              id="stat-Green"
+              >0</span
+            ><span class="stat-label">Green</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="text-view"></div>
+      <div id="image-view"></div>
+
+      <div class="empty-state" id="empty-state">
+        Press the button to generate a deck.
+      </div>
+    </div>
+
+    <script>
+      const RARITY_ORDER = ["Mythic Rare", "Rare", "Uncommon", "Common"];
+      const RARITY_CLASS = {
+        "Mythic Rare": "mythic",
+        Rare: "rare",
+        Uncommon: "uncommon",
+        Common: "common",
+      };
+
+      let currentView = "text";
+      let currentDeck = [];
+
+      document
+        .getElementById("btn-generate")
+        .addEventListener("click", generateDeck);
+
+      function setView(view) {
+        currentView = view;
+        document
+          .getElementById("btn-text")
+          .classList.toggle("active", view === "text");
+        document
+          .getElementById("btn-images")
+          .classList.toggle("active", view === "images");
+        document.getElementById("text-view").style.display =
+          view === "text" ? "block" : "none";
+        document.getElementById("image-view").style.display =
+          view === "images" ? "grid" : "none";
+      }
+
+      async function generateDeck() {
+        const btn = document.getElementById("btn-generate");
+        btn.disabled = true;
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("empty-state").style.display = "none";
+        document.getElementById("text-view").style.display = "none";
+        document.getElementById("image-view").style.display = "none";
+        document.getElementById("deck-stats").style.display = "none";
+        document.getElementById("view-toggle").style.display = "none";
+
+        try {
+          const res = await fetch("/api/deck");
+          if (!res.ok) throw new Error("API error");
+          currentDeck = await res.json();
+          renderDeck(currentDeck);
+        } catch (e) {
+          document.getElementById("empty-state").textContent =
+            "Something went wrong. Try again.";
+          document.getElementById("empty-state").style.display = "block";
+        } finally {
+          document.getElementById("loading").style.display = "none";
+          btn.disabled = false;
+        }
+      }
+
+      function renderDeck(deck) {
+        updateStats(deck);
+        renderTextView(deck);
+        renderImageView(deck);
+        document.getElementById("deck-stats").style.display = "flex";
+        document.getElementById("view-toggle").style.display = "inline-flex";
+        setView(currentView);
+      }
+
+      function updateStats(deck) {
+        const rarities = { "Mythic Rare": 0, Rare: 0, Uncommon: 0, Common: 0 };
+        const colors = { White: 0, Blue: 0, Black: 0, Red: 0, Green: 0 };
+        deck.forEach((c) => {
+          rarities[c.rarity]++;
+          colors[c.color]++;
+        });
+        document.getElementById("stat-mythic").textContent =
+          rarities["Mythic Rare"];
+        document.getElementById("stat-rare").textContent = rarities["Rare"];
+        document.getElementById("stat-uncommon").textContent =
+          rarities["Uncommon"];
+        document.getElementById("stat-common").textContent = rarities["Common"];
+        Object.entries(colors).forEach(([color, n]) => {
+          document.getElementById(`stat-${color}`).textContent = n;
+        });
+      }
+
+      function renderTextView(deck) {
+        const grouped = {};
+        RARITY_ORDER.forEach((r) => (grouped[r] = []));
+        deck.forEach((c) => grouped[c.rarity]?.push(c));
+
+        const view = document.getElementById("text-view");
+        view.innerHTML = "";
+
+        RARITY_ORDER.forEach((rarity, ri) => {
+          const cards = grouped[rarity];
+          if (!cards.length) return;
+
+          const section = document.createElement("div");
+          section.className = "rarity-section";
+
+          const header = document.createElement("div");
+          header.className = `rarity-header ${RARITY_CLASS[rarity]}`;
+          header.innerHTML = `<span class="rarity-pip"></span>${rarity.toUpperCase()} &mdash; ${cards.length}`;
+          section.appendChild(header);
+
+          const list = document.createElement("div");
+          list.className = "card-list";
+
+          cards.sort(
+            (a, b) =>
+              a.color.localeCompare(b.color) || a.name.localeCompare(b.name),
+          );
+          cards.forEach((card, ci) => {
+            const row = document.createElement("div");
+            row.className = `card-row color-${card.color}`;
+            row.style.animationDelay = `${(ri * 10 + ci) * 18}ms`;
+            row.innerHTML = `
+          <span class="card-color-dot color-dot-${card.color}"></span>
+          <span class="card-name">${card.name}</span>
+          <span class="card-color-label">${card.color}</span>
+        `;
+            list.appendChild(row);
+          });
+
+          section.appendChild(list);
+          view.appendChild(section);
+        });
+      }
+
+      function renderImageView(deck) {
+        const view = document.getElementById("image-view");
+        view.innerHTML = "";
+
+        const sorted = [...deck].sort((a, b) => {
+          const ri = (x) => RARITY_ORDER.indexOf(x.rarity);
+          return (
+            ri(a) - ri(b) ||
+            a.color.localeCompare(b.color) ||
+            a.name.localeCompare(b.name)
+          );
+        });
+
+        sorted.forEach((card, i) => {
+          const wrap = document.createElement("div");
+          wrap.className = `card-img-wrap color-${card.color} rarity-${card.rarity.replace(" ", "")}`;
+          wrap.setAttribute("data-name", card.name);
+          wrap.style.animationDelay = `${i * 20}ms`;
+          wrap.title = `${card.name} — ${card.color} ${card.rarity}`;
+
+          if (card.image_url) {
+            const img = document.createElement("img");
+            img.src = card.image_url;
+            img.alt = card.name;
+            img.loading = "lazy";
+            wrap.appendChild(img);
+          } else {
+            wrap.innerHTML = `
+          <div class="card-img-placeholder">
+            <span class="placeholder-glyph">&#9800;</span>
+            <span class="placeholder-name">${card.name}</span>
+          </div>
+        `;
+          }
+
+          view.appendChild(wrap);
+        });
+      }
+    </script>
+  </body>
+</html>
