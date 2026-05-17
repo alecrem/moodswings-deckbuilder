@@ -12,7 +12,9 @@ Tests:
 import unittest
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from typing import Dict, List
+
+import pytest
 
 from deck_generator import (
     Card,
@@ -21,6 +23,18 @@ from deck_generator import (
     generate_deck,
     CARDS_BY_RARITY,
 )
+
+_COLORS = ["White", "Blue", "Black", "Red", "Green"]
+
+
+def make_sample_cards() -> Dict[str, List[Card]]:
+    """Create a minimal set of cards sufficient to generate a full deck."""
+    return {
+        "Common": [Card(f"Common{i}", _COLORS[i % 5], "Common") for i in range(25)],
+        "Uncommon": [Card(f"Uncommon{i}", _COLORS[i % 5], "Uncommon") for i in range(16)],
+        "Rare": [Card(f"Rare{i}", _COLORS[i % 5], "Rare") for i in range(8)],
+        "Mythic Rare": [Card(f"Mythic{i}", _COLORS[i % 5], "Mythic Rare") for i in range(4)],
+    }
 
 
 class TestParseCardFilename(unittest.TestCase):
@@ -134,6 +148,10 @@ class TestLoadCardsFromDirectory(unittest.TestCase):
             load_cards_from_directory("/nonexistent/path")
 
 
+_has_real_cards = any(Path(__file__).parent.joinpath("card_images").glob("*.webp"))
+
+
+@pytest.mark.skipif(not _has_real_cards, reason="card_images/ not populated with real cards")
 class TestCardListIntegrity(unittest.TestCase):
     """Test the integrity of the full card list from filesystem."""
 
@@ -211,14 +229,17 @@ class TestCardListIntegrity(unittest.TestCase):
 class TestDeckGeneration(unittest.TestCase):
     """Test the generate_deck function."""
 
+    def setUp(self):
+        self.cards = make_sample_cards()
+
     def test_deck_total_cards(self):
         """Generated deck has exactly 45 cards."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
         self.assertEqual(len(deck), 45, f"Expected 45 cards, got {len(deck)}")
 
     def test_deck_common_count(self):
         """Generated deck has exactly 23 common cards."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
         common_count = sum(1 for card in deck if card.rarity == "Common")
         self.assertEqual(
             common_count, 23, f"Expected 23 common cards, got {common_count}"
@@ -226,7 +247,7 @@ class TestDeckGeneration(unittest.TestCase):
 
     def test_deck_uncommon_count(self):
         """Generated deck has exactly 14 uncommon cards."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
         uncommon_count = sum(1 for card in deck if card.rarity == "Uncommon")
         self.assertEqual(
             uncommon_count, 14, f"Expected 14 uncommon cards, got {uncommon_count}"
@@ -234,13 +255,13 @@ class TestDeckGeneration(unittest.TestCase):
 
     def test_deck_rare_count(self):
         """Generated deck has exactly 6 rare cards."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
         rare_count = sum(1 for card in deck if card.rarity == "Rare")
         self.assertEqual(rare_count, 6, f"Expected 6 rare cards, got {rare_count}")
 
     def test_deck_mythic_rare_count(self):
         """Generated deck has exactly 2 mythic rare cards."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
         mythic_count = sum(1 for card in deck if card.rarity == "Mythic Rare")
         self.assertEqual(
             mythic_count, 2, f"Expected 2 mythic rare cards, got {mythic_count}"
@@ -248,7 +269,7 @@ class TestDeckGeneration(unittest.TestCase):
 
     def test_deck_no_duplicates(self):
         """Generated deck has no duplicate cards."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
         card_tuples = [(card.name, card.color, card.rarity) for card in deck]
         unique_cards = set(card_tuples)
         self.assertEqual(
@@ -259,34 +280,29 @@ class TestDeckGeneration(unittest.TestCase):
 
     def test_deck_all_cards_valid(self):
         """All cards in generated deck exist in the card list."""
-        deck = generate_deck()
+        deck = generate_deck(self.cards)
+        all_cards = {
+            (c.name, c.color, c.rarity)
+            for rarity_cards in self.cards.values()
+            for c in rarity_cards
+        }
         for card in deck:
-            found = False
-            for rarity_cards in CARDS_BY_RARITY.values():
-                if any(
-                    c.name == card.name
-                    and c.color == card.color
-                    and c.rarity == card.rarity
-                    for c in rarity_cards
-                ):
-                    found = True
-                    break
-            self.assertTrue(found, f"Card {card} not found in card list")
+            self.assertIn(
+                (card.name, card.color, card.rarity),
+                all_cards,
+                f"Card {card} not found in card list",
+            )
 
     def test_deck_generation_randomness(self):
         """Multiple deck generations produce different results."""
-        deck1 = generate_deck()
-        deck2 = generate_deck()
+        deck1 = generate_deck(self.cards)
+        deck2 = generate_deck(self.cards)
 
-        # Very unlikely to be identical
-        deck1_set = set((card.name, card.color, card.rarity) for card in deck1)
-        deck2_set = set((card.name, card.color, card.rarity) for card in deck2)
+        deck1_set = frozenset((card.name, card.color, card.rarity) for card in deck1)
+        deck2_set = frozenset((card.name, card.color, card.rarity) for card in deck2)
 
-        # Allow for the small chance of identical decks
-        if deck1_set != deck2_set:
-            self.assertTrue(True)  # Different decks, as expected
-        else:
-            # If same, just verify structure is still correct
+        # Very unlikely to be identical with 25 commons choosing 23, etc.
+        if deck1_set == deck2_set:
             self.assertEqual(len(deck1), 45)
 
 
