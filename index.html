@@ -357,6 +357,28 @@
         color: var(--text-dim);
         font-size: 15px;
       }
+      .btn-print { font-size: 15px; font-weight: 600; padding: 10px 24px; background: #fff; color: #111; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; display: none; }
+      .btn-print:hover { background: var(--surface); }
+      @media print {
+        @page { size: A4; margin: 10mm; }
+        header, .controls, .deck-stats, .loading, .empty-state, #text-view { display: none !important; }
+        .container { max-width: none; padding: 0; margin: 0; }
+        #image-view {
+          display: grid !important;
+          grid-template-columns: repeat(3, 63mm);
+          gap: 0;
+        }
+        .card-img-wrap {
+          width: 63mm !important;
+          height: 88mm !important;
+          aspect-ratio: unset !important;
+          border-radius: 2mm;
+          border: 0.3mm solid #bbb;
+          break-inside: avoid;
+          box-shadow: none !important;
+        }
+        .card-img-wrap::after { display: none; }
+      }
     </style>
   </head>
   <body>
@@ -370,6 +392,7 @@
 
       <div class="controls">
         <button class="btn-generate" id="btn-generate">Generate Deck</button>
+        <button class="btn-print" id="btn-print" onclick="window.print()">Print</button>
         <div class="view-toggle" id="view-toggle">
           <button class="active" id="btn-text" onclick="setView('text')">
             List
@@ -514,6 +537,7 @@
         renderImageView(deck);
         document.getElementById("deck-stats").style.display = "flex";
         document.getElementById("view-toggle").style.display = "inline-flex";
+        document.getElementById("btn-print").style.display = "inline-block";
         setView(currentView);
       }
 
