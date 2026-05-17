@@ -18,5 +18,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Check formatting
+        run: black --check .
+
+      - name: Lint
+        run: ruff check .
+
       - name: Run tests
         run: python -m pytest test_deck_generator.py -v
