@@ -61,6 +61,26 @@ Execute the full test suite:
 python -m pytest test_deck_generator.py -v
 ```
 
+### Format and Lint
+
+Check formatting with black:
+
+```bash
+black --check .
+```
+
+Apply formatting:
+
+```bash
+black .
+```
+
+Run the linter:
+
+```bash
+ruff check .
+```
+
 Tests validate:
 
 - Card filename parsing (including multi-word rarities like "Mythic Rare")

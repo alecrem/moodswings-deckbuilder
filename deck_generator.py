@@ -162,14 +162,14 @@ def print_deck(deck: List[Card]) -> None:
     print("\n" + "=" * 60)
     print("DECK STATISTICS".center(60))
     print("=" * 60)
-    print(f"\nRarity Breakdown:")
+    print("\nRarity Breakdown:")
     print(f"  Commons:      {rarity_count['Common']}")
     print(f"  Uncommons:    {rarity_count['Uncommon']}")
     print(f"  Rares:        {rarity_count['Rare']}")
     print(f"  Mythic Rares: {rarity_count['Mythic Rare']}")
     print(f"  Total:        {sum(rarity_count.values())}")
 
-    print(f"\nColor Breakdown:")
+    print("\nColor Breakdown:")
     for color in sorted(color_count.keys()):
         print(f"  {color:<10} {color_count[color]}")
     print("\n" + "=" * 60 + "\n")

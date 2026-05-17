@@ -31,9 +31,13 @@ def make_sample_cards() -> Dict[str, List[Card]]:
     """Create a minimal set of cards sufficient to generate a full deck."""
     return {
         "Common": [Card(f"Common{i}", _COLORS[i % 5], "Common") for i in range(25)],
-        "Uncommon": [Card(f"Uncommon{i}", _COLORS[i % 5], "Uncommon") for i in range(16)],
+        "Uncommon": [
+            Card(f"Uncommon{i}", _COLORS[i % 5], "Uncommon") for i in range(16)
+        ],
         "Rare": [Card(f"Rare{i}", _COLORS[i % 5], "Rare") for i in range(8)],
-        "Mythic Rare": [Card(f"Mythic{i}", _COLORS[i % 5], "Mythic Rare") for i in range(4)],
+        "Mythic Rare": [
+            Card(f"Mythic{i}", _COLORS[i % 5], "Mythic Rare") for i in range(4)
+        ],
     }
 
 
@@ -151,7 +155,9 @@ class TestLoadCardsFromDirectory(unittest.TestCase):
 _has_real_cards = any(Path(__file__).parent.joinpath("card_images").glob("*.webp"))
 
 
-@pytest.mark.skipif(not _has_real_cards, reason="card_images/ not populated with real cards")
+@pytest.mark.skipif(
+    not _has_real_cards, reason="card_images/ not populated with real cards"
+)
 class TestCardListIntegrity(unittest.TestCase):
     """Test the integrity of the full card list from filesystem."""
 
