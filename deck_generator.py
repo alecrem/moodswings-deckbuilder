@@ -103,7 +103,7 @@ _card_images_path = os.path.join(os.path.dirname(__file__), "card_images")
 CARDS_BY_RARITY: Dict[str, List[Card]] = load_cards_from_directory(_card_images_path)
 
 
-def generate_deck() -> List[Card]:
+def generate_deck(cards_by_rarity: Dict[str, List[Card]] | None = None) -> List[Card]:
     """
     Generates a randomized 45-card Mood Swings deck.
 
@@ -116,13 +116,16 @@ def generate_deck() -> List[Card]:
     Returns:
         List of 45 Card objects
     """
+    if cards_by_rarity is None:
+        cards_by_rarity = CARDS_BY_RARITY
+
     deck = []
 
     # Select cards by rarity
-    deck.extend(random.sample(CARDS_BY_RARITY["Common"], 23))
-    deck.extend(random.sample(CARDS_BY_RARITY["Uncommon"], 14))
-    deck.extend(random.sample(CARDS_BY_RARITY["Rare"], 6))
-    deck.extend(random.sample(CARDS_BY_RARITY["Mythic Rare"], 2))
+    deck.extend(random.sample(cards_by_rarity["Common"], 23))
+    deck.extend(random.sample(cards_by_rarity["Uncommon"], 14))
+    deck.extend(random.sample(cards_by_rarity["Rare"], 6))
+    deck.extend(random.sample(cards_by_rarity["Mythic Rare"], 2))
 
     # Sort deck by rarity (for display)
     rarity_order = {"Common": 0, "Uncommon": 1, "Rare": 2, "Mythic Rare": 3}
