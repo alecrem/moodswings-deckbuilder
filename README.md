@@ -143,12 +143,17 @@ ls card_images/*.webp | wc -l
 ```
 moodswings-deckbuilder/
 ├── app.py                           # FastAPI app (web server + API)
-├── index.html                       # Single-page frontend
+├── index.html                       # FastAPI frontend
 ├── card_urls.json                   # Card name → image URL map
 ├── deck_generator.py                # Deck generation logic
 ├── test_deck_generator.py           # Unit tests
+├── test_app.py                      # API tests
 ├── requirements.txt                 # Python dependencies
 ├── README.md                        # This file
 ├── moodswings-downloader.user.js    # Userscript to download card images
+├── static/
+│   └── index.html                   # Static site (self-contained, no server needed)
 └── card_images/                     # Card image files (133 .webp, gitignored)
 ```
+
+The `static/` folder is deployed automatically to GitHub Pages on every push to `main`.
