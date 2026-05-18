@@ -2,8 +2,13 @@ import pytest
 import csv
 from unittest.mock import MagicMock, patch
 from generate_translated_cards import (
-    parse_segments, tokenize, is_cjk, output_path,
-    wrap_lines, KINSOKU_START, KINSOKU_END,
+    parse_segments,
+    tokenize,
+    is_cjk,
+    output_path,
+    wrap_lines,
+    KINSOKU_START,
+    KINSOKU_END,
 )
 
 
@@ -106,30 +111,30 @@ class TestKinsoku:
             return wrap_lines([(text, False, False)], {}, 0, max_w)
 
     def test_kinsoku_start_contains_expected(self):
-        assert {'）', '、'} <= KINSOKU_START
-        assert '。' not in KINSOKU_START
+        assert {"）", "、"} <= KINSOKU_START
+        assert "。" not in KINSOKU_START
 
     def test_kinsoku_end_contains_expected(self):
-        assert '（' in KINSOKU_END
+        assert "（" in KINSOKU_END
 
     def test_no_break_before_closing_paren(self):
         # 'ABCDE' fills max_w exactly; without kinsoku '）' would start next line
-        lines = self._lines('ABCDE）')
-        first = ''.join(w for w, _, _ in lines[0][0])
-        assert '）' in first
+        lines = self._lines("ABCDE）")
+        first = "".join(w for w, _, _ in lines[0][0])
+        assert "）" in first
 
     def test_no_break_before_comma(self):
-        lines = self._lines('ABCDE、')
-        first = ''.join(w for w, _, _ in lines[0][0])
-        assert '、' in first
+        lines = self._lines("ABCDE、")
+        first = "".join(w for w, _, _ in lines[0][0])
+        assert "、" in first
 
     def test_no_break_after_open_paren(self):
         # 'ABCD（' fills max_w; 'XYZ' triggers break → '（' carries to next line
-        lines = self._lines('ABCD（XYZ')
-        first = ''.join(w for w, _, _ in lines[0][0])
-        assert not first.endswith('（')
-        second = ''.join(w for w, _, _ in lines[1][0])
-        assert second.startswith('（')
+        lines = self._lines("ABCD（XYZ")
+        first = "".join(w for w, _, _ in lines[0][0])
+        assert not first.endswith("（")
+        second = "".join(w for w, _, _ in lines[1][0])
+        assert second.startswith("（")
 
 
 class TestOutputPath:
@@ -191,23 +196,31 @@ class TestCsvData:
         assert missing == []
 
     def test_es_text_filled_except_blank_cards(self, es_rows):
-        missing = [r["name_en"] for r in es_rows
-                   if not r["text_es"].strip() and r["name_en"] not in self.BLANK_CARDS]
+        missing = [
+            r["name_en"]
+            for r in es_rows
+            if not r["text_es"].strip() and r["name_en"] not in self.BLANK_CARDS
+        ]
         assert missing == []
 
     def test_ja_text_filled_except_blank_cards(self, ja_rows):
-        missing = [r["name_en"] for r in ja_rows
-                   if not r["text_ja"].strip() and r["name_en"] not in self.BLANK_CARDS]
+        missing = [
+            r["name_en"]
+            for r in ja_rows
+            if not r["text_ja"].strip() and r["name_en"] not in self.BLANK_CARDS
+        ]
         assert missing == []
 
     def test_es_no_duplicate_names(self, es_rows):
         from collections import Counter
+
         counts = Counter(r["name_es"] for r in es_rows)
         dups = [k for k, v in counts.items() if v > 1]
         assert dups == []
 
     def test_ja_no_duplicate_names(self, ja_rows):
         from collections import Counter
+
         counts = Counter(r["name_ja"] for r in ja_rows)
         dups = [k for k, v in counts.items() if v > 1]
         assert dups == []

@@ -15,14 +15,14 @@ FONT_NAME_JA = "/System/Library/Fonts/ヒラギノ角ゴシック W7.ttc"
 # Body text fonts
 FONTS_ES = {
     "regular": "/System/Library/Fonts/Supplemental/Georgia.ttf",
-    "bold":    "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
-    "italic":  "/System/Library/Fonts/Supplemental/Georgia Italic.ttf",
+    "bold": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+    "italic": "/System/Library/Fonts/Supplemental/Georgia Italic.ttf",
 }
 _MINCHO = "/System/Library/Fonts/ヒラギノ明朝 ProN.ttc"
 FONTS_JA = {
     "regular": (_MINCHO, 0),  # W3
-    "bold":    (_MINCHO, 2),  # W6
-    "italic":  (_MINCHO, 0),
+    "bold": (_MINCHO, 2),  # W6
+    "italic": (_MINCHO, 0),
 }
 
 NAME_POINTSIZE = 65
@@ -31,47 +31,76 @@ NAME_COLOR = "white"
 
 TEXT_X1, TEXT_Y1 = 64, 642
 TEXT_X2, TEXT_Y2 = 680, 906
-TEXT_W = TEXT_X2 - TEXT_X1          # 616
+TEXT_W = TEXT_X2 - TEXT_X1  # 616
 TEXT_H_DEFAULT = TEXT_Y2 - TEXT_Y1  # 264
-TEXT_H_DICE    = 842 - TEXT_Y1      # 200 — stop before lower-left dice
+TEXT_H_DICE = 842 - TEXT_Y1  # 200 — stop before lower-left dice
 
 TEXT_MAX_SIZE = 40
 TEXT_COLOR = (0, 0, 0)
 PARA_SPACING = 0.35  # extra fraction of line_height between paragraphs
 
 ONE_DIE_CARDS = {
-    "Ambivalence", "Animosity", "Cheer", "Chivalry", "Condescension",
-    "Curiosity", "Cynicism", "Delight", "Determination", "Dignity",
-    "Discipline", "Disgust", "Disregard", "Embarrassment", "Enjoyment",
-    "Excitement", "Frustration", "Glee", "Loyalty", "Obsession",
-    "Patience", "Pity", "Serenity", "Tranquility", "Triumph",
+    "Ambivalence",
+    "Animosity",
+    "Cheer",
+    "Chivalry",
+    "Condescension",
+    "Curiosity",
+    "Cynicism",
+    "Delight",
+    "Determination",
+    "Dignity",
+    "Discipline",
+    "Disgust",
+    "Disregard",
+    "Embarrassment",
+    "Enjoyment",
+    "Excitement",
+    "Frustration",
+    "Glee",
+    "Loyalty",
+    "Obsession",
+    "Patience",
+    "Pity",
+    "Serenity",
+    "Tranquility",
+    "Triumph",
 }
 TWO_DICE_CARDS = {
-    "Altruism", "Celebration", "Fascination", "Fondness", "Happiness",
-    "Infatuation", "Love", "Misery", "Superiority", "Vulnerability",
+    "Altruism",
+    "Celebration",
+    "Fascination",
+    "Fondness",
+    "Happiness",
+    "Infatuation",
+    "Love",
+    "Misery",
+    "Superiority",
+    "Vulnerability",
 }
 
 
 # ── Rich text rendering ──────────────────────────────────────────────────────
 
-KINSOKU_START = frozenset('）、')  # cannot start a line
-KINSOKU_END   = frozenset('（')      # cannot end a line
+KINSOKU_START = frozenset("）、")  # cannot start a line
+KINSOKU_END = frozenset("（")  # cannot end a line
+
 
 def parse_segments(html):
     segments = []
     bold = italic = False
-    for part in re.split(r'(<[^>]+>)', html):
-        if part == '<strong>':
+    for part in re.split(r"(<[^>]+>)", html):
+        if part == "<strong>":
             bold = True
-        elif part == '</strong>':
+        elif part == "</strong>":
             bold = False
-        elif re.match(r'<em\s*>', part):
+        elif re.match(r"<em\s*>", part):
             italic = True
-        elif re.match(r'</em\s*>', part):
+        elif re.match(r"</em\s*>", part):
             italic = False
-        elif re.match(r'<br\s*/?>', part):
-            segments.append(('\x00para', False, False))
-        elif not part.startswith('<') and part:
+        elif re.match(r"<br\s*/?>", part):
+            segments.append(("\x00para", False, False))
+        elif not part.startswith("<") and part:
             segments.append((part, bold, italic))
     return segments
 
@@ -93,21 +122,21 @@ def lh(font):
 
 
 def is_cjk(ch):
-    return '　' <= ch <= '鿿' or '豈' <= ch <= '￯' or '　0' <= ch <= '㿿f'
+    return "　" <= ch <= "鿿" or "豈" <= ch <= "￯" or "　0" <= ch <= "㿿f"
 
 
 def tokenize(text):
     """Split on whitespace; also split each CJK character individually."""
     tokens = []
-    for part in re.split(r'(\s+)', text):
+    for part in re.split(r"(\s+)", text):
         if not part:
             continue
-        chunk = ''
+        chunk = ""
         for ch in part:
             if is_cjk(ch):
                 if chunk:
                     tokens.append(chunk)
-                    chunk = ''
+                    chunk = ""
                 tokens.append(ch)
             else:
                 chunk += ch
@@ -121,7 +150,7 @@ def wrap_lines(segments, fonts, size, max_w):
     lines, cur, cur_w = [], [], 0
     for text, b, i in segments:
         font = get_font(fonts, b, i, size)
-        if text == '\x00para':
+        if text == "\x00para":
             lines.append((cur, True))
             cur, cur_w = [], 0
             continue
@@ -170,7 +199,7 @@ def draw_word_italic(img, word, font, x, y):
     bot = max(bbox[3], 1)  # full height from origin keeps 。ー vertically aligned
     pad = int(bot * ITALIC_SHEAR) + 2
 
-    tmp = Image.new('RGBA', (w + pad + 2, bot + 4), (0, 0, 0, 0))
+    tmp = Image.new("RGBA", (w + pad + 2, bot + 4), (0, 0, 0, 0))
     ImageDraw.Draw(tmp).text((-bbox[0] + pad, 0), word, font=font, fill=TEXT_COLOR)
     sheared = tmp.transform(
         (w + pad + 2, bot + 4),
@@ -182,7 +211,7 @@ def draw_word_italic(img, word, font, x, y):
 
 
 def render_body(html, fonts, max_size, width, height, synthetic_italic=False):
-    html = html.replace('。）', '）')
+    html = html.replace("。）", "）")
     segs = parse_segments(html)
     lo, hi, best = 9, max_size, 9
     while lo <= hi:
@@ -197,7 +226,7 @@ def render_body(html, fonts, max_size, width, height, synthetic_italic=False):
 
     lines = wrap_lines(segs, fonts, best, width)
     line_h = lh(get_font(fonts, False, False, best))
-    img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     y = 0
     for line_segs, is_para_break in lines:
@@ -216,6 +245,7 @@ def render_body(html, fonts, max_size, width, height, synthetic_italic=False):
 
 # ── Card generation ──────────────────────────────────────────────────────────
 
+
 def find_blank(name_en):
     matches = glob.glob(f"card_images_blank/{name_en} (*).png")
     return matches[0] if matches else None
@@ -224,7 +254,9 @@ def find_blank(name_en):
 def output_path(lang, blank_src):
     basename = os.path.basename(blank_src).replace(".png", ".webp")
     # Normalise reversed "Common Red" → "Red Common" to match HTML expectations
-    basename = re.sub(r'\((Common) (Red|Green|Blue|Black|White)\)', r'(\2 \1)', basename)
+    basename = re.sub(
+        r"\((Common) (Red|Green|Blue|Black|White)\)", r"(\2 \1)", basename
+    )
     return os.path.join(f"translated-{lang}", "images", basename)
 
 
@@ -236,31 +268,48 @@ def render_card(blank_src, name_translated, text_translated, lang, name_en, out_
     text_h = TEXT_H_DICE if has_dice else TEXT_H_DEFAULT
 
     # Load blank, render title
-    base = Image.open(blank_src).convert('RGBA')
+    base = Image.open(blank_src).convert("RGBA")
     tmp_title = "/tmp/ms_title_tmp.png"
-    subprocess.run([
-        'magick', blank_src,
-        '-font', font_name,
-        '-pointsize', str(NAME_POINTSIZE),
-        '-fill', NAME_COLOR,
-        '-gravity', 'NorthWest',
-        '-annotate', f'+{NAME_X}+{NAME_Y}', name_translated,
-        tmp_title,
-    ], check=True)
-    base = Image.open(tmp_title).convert('RGBA')
+    subprocess.run(
+        [
+            "magick",
+            blank_src,
+            "-font",
+            font_name,
+            "-pointsize",
+            str(NAME_POINTSIZE),
+            "-fill",
+            NAME_COLOR,
+            "-gravity",
+            "NorthWest",
+            "-annotate",
+            f"+{NAME_X}+{NAME_Y}",
+            name_translated,
+            tmp_title,
+        ],
+        check=True,
+    )
+    base = Image.open(tmp_title).convert("RGBA")
 
     # Render body text
     body = text_translated.strip()
     if body:
-        text_img = render_body(body, fonts_body, TEXT_MAX_SIZE, TEXT_W, text_h,
-                               synthetic_italic=(lang == "ja"))
+        text_img = render_body(
+            body,
+            fonts_body,
+            TEXT_MAX_SIZE,
+            TEXT_W,
+            text_h,
+            synthetic_italic=(lang == "ja"),
+        )
         base.paste(text_img, (TEXT_X1, TEXT_Y1), text_img)
 
-    base.convert('RGB').save(out_path)
+    base.convert("RGB").save(out_path)
 
 
 def main():
     import sys
+
     filter_lang = sys.argv[1] if len(sys.argv) > 1 else None
 
     all_langs = [
@@ -277,9 +326,9 @@ def main():
 
         total = len(rows)
         for i, row in enumerate(rows, 1):
-            name_en      = row["name_en"]
-            name_tr      = row[name_col]
-            text_tr      = row[text_col]
+            name_en = row["name_en"]
+            name_tr = row[name_col]
+            text_tr = row[text_col]
 
             blank = find_blank(name_en)
             if not blank:

@@ -1,4 +1,10 @@
-from generate_blank_cards import card_color, NAME_COVER, NAME_COVER_EXCEPTIONS, ONE_DIE_CARDS, TWO_DICE_CARDS
+from generate_blank_cards import (
+    card_color,
+    NAME_COVER,
+    NAME_COVER_EXCEPTIONS,
+    ONE_DIE_CARDS,
+    TWO_DICE_CARDS,
+)
 
 
 class TestCardColor:

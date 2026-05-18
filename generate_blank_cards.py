@@ -30,20 +30,48 @@ NAME_COVER_EXCEPTIONS = {
 }
 
 # Dice in lower-left corner: restore these regions from the original after blanking
-ONE_DIE_RESTORE  = (39,  852, 175, 963)
-TWO_DICE_RESTORE = (9,   852, 238, 963)
+ONE_DIE_RESTORE = (39, 852, 175, 963)
+TWO_DICE_RESTORE = (9, 852, 238, 963)
 
 ONE_DIE_CARDS = {
-    "Ambivalence", "Animosity", "Cheer", "Chivalry", "Condescension",
-    "Curiosity", "Cynicism", "Delight", "Determination", "Dignity",
-    "Discipline", "Disgust", "Disregard", "Embarrassment", "Enjoyment",
-    "Excitement", "Frustration", "Glee", "Loyalty", "Obsession",
-    "Patience", "Pity", "Serenity", "Tranquility", "Triumph",
+    "Ambivalence",
+    "Animosity",
+    "Cheer",
+    "Chivalry",
+    "Condescension",
+    "Curiosity",
+    "Cynicism",
+    "Delight",
+    "Determination",
+    "Dignity",
+    "Discipline",
+    "Disgust",
+    "Disregard",
+    "Embarrassment",
+    "Enjoyment",
+    "Excitement",
+    "Frustration",
+    "Glee",
+    "Loyalty",
+    "Obsession",
+    "Patience",
+    "Pity",
+    "Serenity",
+    "Tranquility",
+    "Triumph",
 }
 
 TWO_DICE_CARDS = {
-    "Altruism", "Celebration", "Fascination", "Fondness", "Happiness",
-    "Infatuation", "Love", "Misery", "Superiority", "Vulnerability",
+    "Altruism",
+    "Celebration",
+    "Fascination",
+    "Fondness",
+    "Happiness",
+    "Infatuation",
+    "Love",
+    "Misery",
+    "Superiority",
+    "Vulnerability",
 }
 
 
@@ -85,11 +113,20 @@ def generate(src):
         dice_restore = None
 
     cmd = [
-        "magick", src,
-        "-fill", fill,
-        "-draw", f"rectangle {nc[0]},{nc[1]} {nc[2]},{nc[3]}",
-        "(", blank_src, "-crop", f"{crop_w}x{crop_h}+{x1}+{y1}", "+repage", ")",
-        "-geometry", f"+{x1}+{y1}",
+        "magick",
+        src,
+        "-fill",
+        fill,
+        "-draw",
+        f"rectangle {nc[0]},{nc[1]} {nc[2]},{nc[3]}",
+        "(",
+        blank_src,
+        "-crop",
+        f"{crop_w}x{crop_h}+{x1}+{y1}",
+        "+repage",
+        ")",
+        "-geometry",
+        f"+{x1}+{y1}",
         "-composite",
     ]
 
@@ -97,8 +134,14 @@ def generate(src):
         dx1, dy1, dx2, dy2 = dice_restore
         dw, dh = dx2 - dx1, dy2 - dy1
         cmd += [
-            "(", src, "-crop", f"{dw}x{dh}+{dx1}+{dy1}", "+repage", ")",
-            "-geometry", f"+{dx1}+{dy1}",
+            "(",
+            src,
+            "-crop",
+            f"{dw}x{dh}+{dx1}+{dy1}",
+            "+repage",
+            ")",
+            "-geometry",
+            f"+{dx1}+{dy1}",
             "-composite",
         ]
 
