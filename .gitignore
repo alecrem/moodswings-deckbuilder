@@ -50,6 +50,20 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
+# Fonts (licensed, not for distribution)
+fonts/*
+!fonts/.gitkeep
+
 # Card Images
 card_images/*
 !card_images/.gitkeep
+card_images_blank/*
+!card_images_blank/.gitkeep
+translated-es/images/*
+!translated-es/images/.gitkeep
+translated-ja/images/*
+!translated-ja/images/.gitkeep
+
+# Proprietary card data (texts / translations — not for redistribution)
+translations/cards_es.csv
+translations/cards_ja.csv

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mood Swings — デッキビルダー</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --bg: #ffffff; --surface: #f5f5f5; --border: #ddd; --text: #111; --text-dim: #777;
+        --c-white: #b8860b; --c-blue: #0e68ab; --c-black: #6a0dad; --c-red: #c0392b; --c-green: #1a7a3a;
+        --r-common: #666; --r-uncommon: #607080; --r-rare: #b8860b; --r-mythic: #c0520a;
+      }
+      body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 16px; min-height: 100vh; }
+      .container { max-width: 820px; margin: 0 auto; padding: 40px 20px 60px; }
+      header { margin-bottom: 32px; }
+      h1 { font-size: 1.8rem; font-weight: 700; }
+      .subtitle { margin-top: 4px; font-size: 14px; color: var(--text-dim); }
+      .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+      .btn-generate { font-size: 15px; font-weight: 600; padding: 10px 24px; background: #111; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+      .btn-generate:hover { background: #333; }
+      .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-print { font-size: 15px; font-weight: 600; padding: 10px 24px; background: #fff; color: #111; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; display: none; }
+      .btn-print:hover { background: var(--surface); }
+      .view-toggle { display: none; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-size: 14px; }
+      .view-toggle button { background: transparent; border: none; padding: 8px 16px; cursor: pointer; color: var(--text-dim); }
+      .view-toggle button.active { background: var(--surface); color: var(--text); font-weight: 600; }
+      .view-toggle .sep { display: inline-block; width: 1px; background: var(--border); align-self: stretch; }
+      .loading { display: none; color: var(--text-dim); font-size: 14px; padding: 32px 0; }
+      .deck-stats { display: none; gap: 0; flex-wrap: wrap; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-size: 13px; }
+      .stats-group { display: flex; }
+      .stats-divider { width: 1px; background: var(--border); }
+      .stat { padding: 10px 16px; text-align: center; border-right: 1px solid var(--border); }
+      .stat:last-child { border-right: none; }
+      .stat-num { display: block; font-size: 18px; font-weight: 700; }
+      .stat-label { color: var(--text-dim); font-size: 11px; }
+      .stat-mythic .stat-num { color: var(--r-mythic); }
+      .stat-rare   .stat-num { color: var(--r-rare); }
+      .stat-uncommon .stat-num { color: var(--r-uncommon); }
+      .stat-common .stat-num { color: var(--r-common); }
+      @media (max-width: 600px) { .stats-divider { display: none; } .deck-stats { flex-direction: column; } .stats-group { flex-wrap: wrap; } }
+      #text-view { display: none; }
+      .rarity-section { margin-bottom: 28px; }
+      .rarity-header { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid currentColor; display: flex; align-items: center; gap: 8px; }
+      .rarity-pip { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+      .rarity-header.mythic { color: var(--r-mythic); } .rarity-header.rare { color: var(--r-rare); } .rarity-header.uncommon { color: var(--r-uncommon); } .rarity-header.common { color: var(--r-common); }
+      .card-list { display: flex; flex-direction: column; }
+      .card-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-left: 3px solid transparent; }
+      .card-row:hover { background: var(--surface); }
+      .card-row.color-White { border-left-color: var(--c-white); } .card-row.color-Blue { border-left-color: var(--c-blue); } .card-row.color-Black { border-left-color: var(--c-black); } .card-row.color-Red { border-left-color: var(--c-red); } .card-row.color-Green { border-left-color: var(--c-green); }
+      .card-color-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
+      .color-dot-White { background: #f0d080; } .color-dot-Blue { background: var(--c-blue); } .color-dot-Black { background: var(--c-black); } .color-dot-Red { background: var(--c-red); } .color-dot-Green { background: var(--c-green); }
+      .card-name-en { font-size: 0.8em; opacity: 0.6; }
+      .card-name { flex: 1; } .card-color-label { font-size: 12px; color: var(--text-dim); }
+      #image-view { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .card-img-wrap { position: relative; aspect-ratio: 488/680; border-radius: 6px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); }
+      .card-img-wrap:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+      .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .card-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-dim); padding: 8px; text-align: center; }
+      .card-img-wrap::after { content: attr(data-name); position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.75)); color: #fff; font-size: 11px; padding: 16px 6px 6px; transform: translateY(100%); transition: transform 0.15s; text-align: center; }
+      .card-img-wrap:hover::after { transform: translateY(0); }
+      .empty-state { padding: 48px 0; color: var(--text-dim); font-size: 15px; }
+      @media print {
+        @page { size: A4; margin: 10mm; }
+        header, .controls, .deck-stats, .loading, .empty-state, #text-view { display: none !important; }
+        .container { max-width: none; padding: 0; margin: 0; }
+        #image-view { display: grid !important; grid-template-columns: repeat(3, 63mm); gap: 0; }
+        .card-img-wrap { width: 63mm !important; height: 88mm !important; aspect-ratio: unset !important; border-radius: 2mm; border: 0.3mm solid #bbb; break-inside: avoid; box-shadow: none !important; }
+        .card-img-wrap::after { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Mood Swings — デッキビルダー</h1>
+        <p class="subtitle">非公式ツール &mdash; 45枚のランダムデッキを生成</p>
+      </header>
+      <div class="controls">
+        <button class="btn-generate" id="btn-generate">デッキ生成</button>
+        <button class="btn-print" id="btn-print" onclick="window.print()">印刷</button>
+        <div class="view-toggle" id="view-toggle">
+          <button class="active" id="btn-text" onclick="setView('text')">リスト</button>
+          <div class="sep"></div>
+          <button id="btn-images" onclick="setView('images')">画像</button>
+        </div>
+      </div>
+      <div class="loading" id="loading">デッキを生成中&hellip;</div>
+      <div class="deck-stats" id="deck-stats">
+        <div class="stats-group">
+          <div class="stat stat-mythic"><span class="stat-num" id="stat-mythic">0</span><span class="stat-label">Mythic Rare</span></div>
+          <div class="stat stat-rare"><span class="stat-num" id="stat-rare">0</span><span class="stat-label">Rare</span></div>
+          <div class="stat stat-uncommon"><span class="stat-num" id="stat-uncommon">0</span><span class="stat-label">Uncommon</span></div>
+          <div class="stat stat-common"><span class="stat-num" id="stat-common">0</span><span class="stat-label">Common</span></div>
+        </div>
+        <div class="stats-divider"></div>
+        <div class="stats-group">
+          <div class="stat"><span class="stat-num" style="color:var(--c-white)" id="stat-White">0</span><span class="stat-label">White</span></div>
+          <div class="stat"><span class="stat-num" style="color:var(--c-blue)"  id="stat-Blue">0</span><span class="stat-label">Blue</span></div>
+          <div class="stat"><span class="stat-num" style="color:var(--c-black)" id="stat-Black">0</span><span class="stat-label">Black</span></div>
+          <div class="stat"><span class="stat-num" style="color:var(--c-red)"   id="stat-Red">0</span><span class="stat-label">Red</span></div>
+          <div class="stat"><span class="stat-num" style="color:var(--c-green)" id="stat-Green">0</span><span class="stat-label">Green</span></div>
+        </div>
+      </div>
+      <div id="text-view"></div>
+      <div id="image-view"></div>
+      <div class="empty-state" id="empty-state">ボタンを押してデッキを生成してください。</div>
+    </div>
+    <script>
+      const ALL_CARDS = [{"name": "Altruism", "color": "White", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_1bc40321f2.webp", "localName": "利他心"}, {"name": "Ambition", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_5f8ab4747e.webp", "localName": "野心"}, {"name": "Ambivalence", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_9f66939e52.webp", "localName": "曖昧さ"}, {"name": "Anger", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2bc0509610.webp", "localName": "怒り"}, {"name": "Animosity", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_87967089d9.webp", "localName": "敵意"}, {"name": "Angst", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f8d9de643e.webp", "localName": "苦悩"}, {"name": "Anxiety", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_00bf0769bc.webp", "localName": "不安"}, {"name": "Apathy", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_214a4fbfb6.webp", "localName": "無関心"}, {"name": "Arrogance", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2c0da1316e.webp", "localName": "傲慢"}, {"name": "Avoidance", "color": "Blue", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_6dd47f31dd.webp", "localName": "回避"}, {"name": "Awe", "color": "Green", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_6922ed810f.webp", "localName": "畏敬"}, {"name": "Bashfulness", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2a40ab595f.webp", "localName": "恥じらい"}, {"name": "Benevolence", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_39aeab52de.webp", "localName": "善意"}, {"name": "Betrayal", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2cf642f7d2.webp", "localName": "裏切り"}, {"name": "Bitterness", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_fedf3406e2.webp", "localName": "苦々しさ"}, {"name": "Bliss", "color": "Green", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f11ac0d4cd.webp", "localName": "至福"}, {"name": "Boredom", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a5c5a5f851.webp", "localName": "退屈"}, {"name": "Bravado", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_10a2381e9e.webp", "localName": "虚勢"}, {"name": "Celebration", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a73f42f958.webp", "localName": "祝祭"}, {"name": "Chaos", "color": "Red", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_33c8513101.webp", "localName": "混沌"}, {"name": "Charity", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_056ea8dd92.webp", "localName": "慈善"}, {"name": "Cheer", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a84ef2f73e.webp", "localName": "元気"}, {"name": "Chivalry", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_17ad03c3fd.webp", "localName": "騎士道"}, {"name": "Complacency", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_28fdace6de.webp", "localName": "現状満足"}, {"name": "Compulsion", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f709a579c6.webp", "localName": "強迫"}, {"name": "Condescension", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_0c52b2ac0d.webp", "localName": "見下し"}, {"name": "Confusion", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2e5a6b38f7.webp", "localName": "混乱"}, {"name": "Contempt", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_6465486329.webp", "localName": "軽蔑"}, {"name": "Conviction", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_e2d644bb36.webp", "localName": "確信"}, {"name": "Corruption", "color": "Black", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_493c0b60a1.webp", "localName": "腐敗"}, {"name": "Courage", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8d8ff36909.webp", "localName": "勇気"}, {"name": "Creativity", "color": "Blue", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_96bb086d3d.webp", "localName": "創造力"}, {"name": "Cruelty", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_72e6fb2349.webp", "localName": "残酷さ"}, {"name": "Curiosity", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_4189ffd6b0.webp", "localName": "好奇心"}, {"name": "Cynicism", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_3e5cc80185.webp", "localName": "冷笑"}, {"name": "Delight", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8a3502598f.webp", "localName": "喜悦"}, {"name": "Denial", "color": "Blue", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8a9c5980f4.webp", "localName": "否定"}, {"name": "Determination", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f6a797b668.webp", "localName": "決意"}, {"name": "Dignity", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_c71c6fe5a6.webp", "localName": "尊厳"}, {"name": "Discipline", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_599c19a67e.webp", "localName": "自律"}, {"name": "Disgust", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_449e96eaa5.webp", "localName": "嫌悪"}, {"name": "Disillusionment", "color": "White", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_88d0a39121.webp", "localName": "幻滅"}, {"name": "Disorientation", "color": "Blue", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_5accb283ed.webp", "localName": "方向感覚喪失"}, {"name": "Disregard", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_6147c110a1.webp", "localName": "無視"}, {"name": "Doubt", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_dd66017000.webp", "localName": "疑念"}, {"name": "Duplicity", "color": "Blue", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_1364393674.webp", "localName": "二枚舌"}, {"name": "Eagerness", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_638fd1b331.webp", "localName": "熱心"}, {"name": "Embarrassment", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f96a43ef62.webp", "localName": "恥ずかしさ"}, {"name": "Encouragement", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a5c2c92dce.webp", "localName": "励まし"}, {"name": "Enjoyment", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_3f91566414.webp", "localName": "楽しみ"}, {"name": "Enthusiasm", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_37c8ff6ac3.webp", "localName": "熱狂"}, {"name": "Envy", "color": "Black", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_41c30f829d.webp", "localName": "嫉妬"}, {"name": "Euphoria", "color": "Green", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_944642a216.webp", "localName": "多幸感"}, {"name": "Excitement", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_091025d24d.webp", "localName": "興奮"}, {"name": "Exhilaration", "color": "Red", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_32e19d377b.webp", "localName": "高揚感"}, {"name": "Faith", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_51ab7c95dd.webp", "localName": "信仰"}, {"name": "Fascination", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_cf54facc33.webp", "localName": "魅了"}, {"name": "Fear", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_906b1bb1d6.webp", "localName": "恐怖"}, {"name": "Fickleness", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_7b2399c941.webp", "localName": "移り気"}, {"name": "Fondness", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_d5d19db135.webp", "localName": "愛着"}, {"name": "Friendliness", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8ef71c708a.webp", "localName": "親切さ"}, {"name": "Frustration", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_78e5406896.webp", "localName": "いらだち"}, {"name": "Fury", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_4001d05e4a.webp", "localName": "激怒"}, {"name": "Generosity", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_b5b6235248.webp", "localName": "気前よさ"}, {"name": "Glee", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_c8db74f963.webp", "localName": "歓喜"}, {"name": "Gluttony", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_4e9904fa65.webp", "localName": "大食い"}, {"name": "Grace", "color": "Green", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a4ac5b193b.webp", "localName": "優雅さ"}, {"name": "Grief", "color": "Black", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_e4476b11a4.webp", "localName": "悲嘆"}, {"name": "Guile", "color": "Blue", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_4c31ac573b.webp", "localName": "狡猾さ"}, {"name": "Guilt", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_cfb7aab4ca.webp", "localName": "罪悪感"}, {"name": "Happiness", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_44522f15f3.webp", "localName": "幸福"}, {"name": "Harmony", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_1de68dc34c.webp", "localName": "調和"}, {"name": "Hate", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_b423a5e0fc.webp", "localName": "憎しみ"}, {"name": "Hesitation", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_95ca483374.webp", "localName": "ためらい"}, {"name": "Honor", "color": "White", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_fcb2539b1b.webp", "localName": "名誉"}, {"name": "Hope", "color": "Green", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8569c6868b.webp", "localName": "希望"}, {"name": "Hostility", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_98adc285ea.webp", "localName": "敵対心"}, {"name": "Idealism", "color": "White", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_65defcbada.webp", "localName": "理想主義"}, {"name": "Imagination", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_3af00d3391.webp", "localName": "想像力"}, {"name": "Indecisiveness", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_50d6760556.webp", "localName": "優柔不断"}, {"name": "Indifference", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_0950b77878.webp", "localName": "無頓着"}, {"name": "Infatuation", "color": "Red", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f2c4eb5919.webp", "localName": "熱狂的な恋"}, {"name": "Insecurity", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_d74b605c8b.webp", "localName": "不安感"}, {"name": "Instability", "color": "Red", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_792f6c2f0a.webp", "localName": "不安定さ"}, {"name": "Intimidation", "color": "Black", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_950df3062a.webp", "localName": "威圧"}, {"name": "Joy", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_58ef667397.webp", "localName": "喜び"}, {"name": "Kindness", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_900364d212.webp", "localName": "親切"}, {"name": "Laziness", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_66b6f7a960.webp", "localName": "怠惰"}, {"name": "Love", "color": "Green", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_9bcb67999e.webp", "localName": "愛"}, {"name": "Loyalty", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8c6dcb6580.webp", "localName": "忠誠"}, {"name": "Malice", "color": "Black", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_69ca7ade91.webp", "localName": "悪意"}, {"name": "Meekness", "color": "White", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_53a2b5358c.webp", "localName": "従順さ"}, {"name": "Melancholy", "color": "Black", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_b69d84c162.webp", "localName": "憂鬱"}, {"name": "Misery", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_9861468165.webp", "localName": "惨めさ"}, {"name": "Neurosis", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_836f2df163.webp", "localName": "神経症"}, {"name": "Nostalgia", "color": "Green", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_fa2e8db989.webp", "localName": "懐かしさ"}, {"name": "Obsession", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f9134e6286.webp", "localName": "執着"}, {"name": "Pacifism", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_e1d60e419b.webp", "localName": "平和主義"}, {"name": "Panic", "color": "Blue", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_88c69dd9d3.webp", "localName": "パニック"}, {"name": "Paranoia", "color": "Black", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_59818f9df2.webp", "localName": "妄想"}, {"name": "Passion", "color": "Red", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_cae948ae72.webp", "localName": "情熱"}, {"name": "Patience", "color": "White", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_d106975fda.webp", "localName": "忍耐"}, {"name": "Pity", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_44a3456b6c.webp", "localName": "哀れみ"}, {"name": "Pride", "color": "White", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_0a4b823b72.webp", "localName": "誇り"}, {"name": "Rage", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_b4f2eea560.webp", "localName": "憤怒"}, {"name": "Rationalization", "color": "Blue", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_d90751636e.webp", "localName": "合理化"}, {"name": "Rebellion", "color": "Red", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_4bc31ec6ea.webp", "localName": "反抗"}, {"name": "Recklessness", "color": "Red", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_436cf6c9e4.webp", "localName": "無謀さ"}, {"name": "Regret", "color": "Blue", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8d23a36570.webp", "localName": "後悔"}, {"name": "Rejection", "color": "Black", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_334f16a788.webp", "localName": "拒絶"}, {"name": "Repentance", "color": "White", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a1a9edc565.webp", "localName": "後悔の念"}, {"name": "Sadness", "color": "Black", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_0cf6ff4201.webp", "localName": "悲しみ"}, {"name": "Scorn", "color": "White", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a9daebaf83.webp", "localName": "侮蔑"}, {"name": "Self-Loathing", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_0236a11a6e.webp", "localName": "自己嫌悪"}, {"name": "Serenity", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_26d579f073.webp", "localName": "平静さ"}, {"name": "Shame", "color": "White", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_18a5fa19a1.webp", "localName": "恥"}, {"name": "Shock", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_fa95cdf5a9.webp", "localName": "衝撃"}, {"name": "Sloth", "color": "Green", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_355c27037e.webp", "localName": "怠け"}, {"name": "Sneakiness", "color": "Blue", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_c7ddf50edd.webp", "localName": "ずる賢さ"}, {"name": "Spite", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_b795c10ecc.webp", "localName": "意地悪"}, {"name": "Stubbornness", "color": "Red", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_f2efdc8008.webp", "localName": "頑固さ"}, {"name": "Superiority", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_9e3954cd2f.webp", "localName": "優越感"}, {"name": "Suspicion", "color": "Black", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_a927be2da9.webp", "localName": "疑惑"}, {"name": "Thrill", "color": "Red", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_595de70539.webp", "localName": "スリル"}, {"name": "Tranquility", "color": "Green", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_85da101a78.webp", "localName": "静けさ"}, {"name": "Triumph", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2e6fc27df8.webp", "localName": "勝利"}, {"name": "Validation", "color": "White", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_dd16eaf38e.webp", "localName": "承認"}, {"name": "Vanity", "color": "Black", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_e75bca82b9.webp", "localName": "虚栄"}, {"name": "Vulnerability", "color": "Green", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_2dbb36bbfd.webp", "localName": "脆さ"}, {"name": "Wonder", "color": "Green", "rarity": "Mythic Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_e844a24ace.webp", "localName": "驚嘆"}, {"name": "Worry", "color": "Blue", "rarity": "Uncommon", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_d0c87e3659.webp", "localName": "心配"}, {"name": "Wrath", "color": "Red", "rarity": "Rare", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_3d371a224c.webp", "localName": "憤り"}, {"name": "Zeal", "color": "Red", "rarity": "Common", "url": "https://media.wizards.com/2026/msw/xABg1Js9Np/en_8d29fbaa74.webp", "localName": "熱意"}];
+      const RARITY_ORDER = ['Mythic Rare', 'Rare', 'Uncommon', 'Common'];
+      const RARITY_CLASS = { 'Mythic Rare': 'mythic', 'Rare': 'rare', 'Uncommon': 'uncommon', 'Common': 'common' };
+      const DECK_COUNTS = { 'Common': 23, 'Uncommon': 14, 'Rare': 6, 'Mythic Rare': 2 };
+
+      const cardsByRarity = { 'Common': [], 'Uncommon': [], 'Rare': [], 'Mythic Rare': [] };
+      ALL_CARDS.forEach(c => cardsByRarity[c.rarity]?.push(c));
+
+      function sample(arr, n) {
+        const copy = [...arr];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy.slice(0, n);
+      }
+
+      function generateDeck() {
+        return RARITY_ORDER.flatMap(r => sample(cardsByRarity[r], DECK_COUNTS[r]));
+      }
+
+      let currentView = 'images';
+
+      document.getElementById('btn-generate').addEventListener('click', () => {
+        const deck = generateDeck();
+        updateStats(deck);
+        renderTextView(deck);
+        renderImageView(deck);
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('deck-stats').style.display = 'flex';
+        document.getElementById('view-toggle').style.display = 'inline-flex';
+        document.getElementById('btn-print').style.display = 'inline-block';
+        setView(currentView);
+      });
+
+      function setView(view) {
+        currentView = view;
+        document.getElementById('btn-text').classList.toggle('active', view === 'text');
+        document.getElementById('btn-images').classList.toggle('active', view === 'images');
+        document.getElementById('text-view').style.display = view === 'text' ? 'block' : 'none';
+        document.getElementById('image-view').style.display = view === 'images' ? 'grid' : 'none';
+      }
+
+      function updateStats(deck) {
+        const rarities = { 'Mythic Rare': 0, Rare: 0, Uncommon: 0, Common: 0 };
+        const colors = { White: 0, Blue: 0, Black: 0, Red: 0, Green: 0 };
+        deck.forEach(c => { rarities[c.rarity]++; colors[c.color]++; });
+        document.getElementById('stat-mythic').textContent = rarities['Mythic Rare'];
+        document.getElementById('stat-rare').textContent = rarities['Rare'];
+        document.getElementById('stat-uncommon').textContent = rarities['Uncommon'];
+        document.getElementById('stat-common').textContent = rarities['Common'];
+        Object.entries(colors).forEach(([color, n]) => {
+          document.getElementById(`stat-${color}`).textContent = n;
+        });
+      }
+
+      function renderTextView(deck) {
+        const grouped = {};
+        RARITY_ORDER.forEach(r => grouped[r] = []);
+        deck.forEach(c => grouped[c.rarity]?.push(c));
+        const view = document.getElementById('text-view');
+        view.innerHTML = '';
+        RARITY_ORDER.forEach(rarity => {
+          const cards = grouped[rarity];
+          if (!cards.length) return;
+          const section = document.createElement('div');
+          section.className = 'rarity-section';
+          const header = document.createElement('div');
+          header.className = `rarity-header ${RARITY_CLASS[rarity]}`;
+          header.innerHTML = `<span class="rarity-pip"></span>${rarity.toUpperCase()} — ${cards.length}`;
+          section.appendChild(header);
+          const list = document.createElement('div');
+          list.className = 'card-list';
+          cards.sort((a, b) => a.color.localeCompare(b.color) || a.name.localeCompare(b.name));
+          cards.forEach(card => {
+            const row = document.createElement('div');
+            row.className = `card-row color-${card.color}`;
+            row.innerHTML = `<span class="card-color-dot color-dot-${card.color}"></span><span class="card-name">${card.localName} <span class="card-name-en">(${card.name})</span></span><span class="card-color-label">${card.color}</span>`;
+            list.appendChild(row);
+          });
+          section.appendChild(list);
+          view.appendChild(section);
+        });
+      }
+
+      function renderImageView(deck) {
+        const view = document.getElementById('image-view');
+        view.innerHTML = '';
+        const sorted = [...deck].sort((a, b) => {
+          const ri = x => RARITY_ORDER.indexOf(x.rarity);
+          return ri(a) - ri(b) || a.color.localeCompare(b.color) || a.name.localeCompare(b.name);
+        });
+        sorted.forEach(card => {
+          const wrap = document.createElement('div');
+          wrap.className = `card-img-wrap color-${card.color}`;
+          wrap.setAttribute('data-name', card.name);
+          wrap.title = `${card.name} — ${card.color} ${card.rarity}`;
+          const img = document.createElement('img');
+          img.src = `./images/${card.name} (${card.color} ${card.rarity}).webp`;
+          img.alt = card.name;
+          img.loading = 'lazy';
+          img.onerror = function() {
+            wrap.innerHTML = `<div class="card-img-placeholder">${card.name}</div>`;
+          };
+          wrap.appendChild(img);
+          view.appendChild(wrap);
+        });
+      }
+    </script>
+  </body>
+</html>
