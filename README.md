@@ -100,9 +100,10 @@ python -m pytest -v
 
 Tests covering card generation logic and CSV data integrity (the CSV tests are skipped if the translation files are not present).
 
-### Lint
+### Format and lint
 
 ```bash
+black .
 ruff check .
 ```
 
