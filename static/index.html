@@ -77,18 +77,20 @@
         .container { max-width: none; padding: 0; margin: 0; }
         #image-view {
           display: grid !important;
-          grid-template-columns: repeat(3, 63mm);
+          grid-template-columns: repeat(3, 61mm);
           gap: 0;
         }
         .card-img-wrap {
-          width: 63mm !important;
-          height: 88mm !important;
+          width: 61mm !important;
+          height: 86mm !important;
           aspect-ratio: unset !important;
           border-radius: 2mm;
           border: 0.3mm solid #bbb;
           break-inside: avoid;
           box-shadow: none !important;
+          overflow: hidden;
         }
+        .card-img-wrap img { width: 63mm; height: 88mm; margin: -1mm; object-fit: unset; }
         .card-img-wrap::after { display: none; }
       }
     </style>

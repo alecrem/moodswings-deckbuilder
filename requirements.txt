@@ -1,6 +1,9 @@
 # Testing
 pytest>=9.0.0
 
+# Image generation
+Pillow>=10.0.0
+
 # Web
 fastapi>=0.115.0
 uvicorn>=0.30.0

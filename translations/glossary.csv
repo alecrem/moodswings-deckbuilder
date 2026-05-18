@@ -1,0 +1,39 @@
+term_en,term_es,term_ja,definition_en
+Additional Mood,Emoción adicional,追加気持ち,"Normally, you only get to play one mood a turn. Some cards will allow you to play an extra mood."
+After scoring,Después del recuento,得点計算後,"Some cards have an effect that happens at the end of the round after you have added up the value of the cards but before the round has ended."
+Becomes yours,Se convierte en tuyo,あなたのものになる,"You gain a mood (card). It is now considered your mood for the rest of the game. If it gets returned to a hand, it goes to your hand."
+Card,Carta,カード,"This refers to any card in your hand, the discard pile, or the deck. Cards in play are referred to as moods."
+Choose any number of players,Elige cualquier número de jugadores,プレイヤーを何人でも選ぶ,"You may choose any number from zero to the number of people playing. You may choose yourself."
+Choose up to two players,Elige hasta dos jugadores,最大2人のプレイヤーを選ぶ,"You may select zero, one, or two players for this card's effect. You may be one of those players."
+Copy,Copia,コピー,"Your mood takes on all attributes of another mood, including dice, color, and abilities. Just treat it as if it were the chosen mood. If that mood goes to a hand or discard pile, it stops being a copy."
+Deal,Repartir,配る,"Give each player a card or cards from a pile of cards (where those cards come from will be explained by the card). For example, Chaos has you pick up all the moods, shuffle them, then deal them out to the players."
+Deck,Mazo,デッキ,This is the randomized stack of cards you draw from.
+Dice,Dado,さいころ,The icon in the top right or lower left corner representing the primary or secondary value of a card.
+Discard / Discarded,Descartar / Descartada,捨てる / 捨てられた,"Putting a card from a player's hand into the discard pile. Cards that have been put into the discard pile from a hand are discarded cards."
+Discard Pile,Pila de descarte,捨て札,This is a shared pile that cards can go to when they leave play or a player's hand.
+Even Value,Valor par,偶数の点数,"Mostly cards with a value of 0, 2, 4, 6, 8, 10, or 12. (There are some rare and mythic rare moods that can have even higher values, so any number that's a whole number when divisible by two.)"
+Give card / mood,Entregar carta / emoción,カード / 気持ちを渡す,"You choose a card/mood of yours and permanently make it another player's. If the card then gets put into a player's hand, it will go to their hand, not yours."
+Give the mood back,Devolver la emoción,気持ちを返す,Return a mood (card in play) to the player you originally took it from.
+Have the same value,Tener el mismo valor,同じ点数を持つ,If the current value of two cards is the same number they have the same value.
+Hurt Feelings,Sentimientos heridos,傷ついた感情,"In games with three or more players, a special ability gained by the player with the lowest score (with the tie-breaker of playing the latest that turn) that allows them to play an additional card on their next turn."
+Lose,Perder,負ける,"Not having the highest score for a turn. Losing a round allows you to draw a card. In a game with three or more players, there will be multiple players losing the round, the lowest scoring of which gains Hurt Feelings."
+Lower Left Corner,Esquina inferior izquierda,左下のさいころ,This is referring to the die which is the secondary value of the card.
+May,Puedes,してもよい,This ability is something you can choose to do or not do.
+Mood,Emoción,気持ち,"A mood is any card in play. Cards in your hand, the discard pile, or the deck are not moods."
+Moodiest,Con más emociones,最多気持ち,The player with the most moods (cards in play).
+Most common color,Color más frecuente,最も多い色,"This is a color that has the most representation of the moods (cards) in play. If a color with the greatest number is shared between two things, both are considered the most common. For example, if there are two white, three blue, three black, one red, and two green cards in play, blue and black are both the most common color."
+Odd Value,Valor impar,奇数の点数,"Mostly cards with a value of 1, 3, 5, 7, 9, or 11. (There are some rare and mythic rare moods that can have even higher values, so any number that's not a whole number when divisible by two.)"
+Play a mood,Jugar una emoción,気持ちをプレイする,Put a card from your hand into play.
+Play a mood from the discard pile,Jugar una emoción desde la pila de descarte,捨て札から気持ちをプレイする,"You may play a mood, but instead of playing it from your hand, you can play it from the discard pile. Everything about how the card plays stays the same."
+Random,Aleatorio,ランダム,"This decision is made without the player getting a conscious choice. For example, Altruism gives the player a random card from the discard pile. You would turn the cards in the discard pile face down and shuffle them before drawing a card."
+Round,Ronda,ラウンド,"The period during which each player gets the opportunity to play a card. The end of the round is when you score the cards and get a winner and loser(s) of that round."
+Score,Puntuación / Puntuar,得点 / 得点を計算する,"A noun: the combined value of all your cards. And a verb: the act of counting a card's value to figure out how many points you have for the round."
+Scoring,Recuento,得点計算,The period at the end of the turn when you add up the value of all your cards.
+Share a color / value,Compartir color / valor,色 / 点数を共有する,"If the card in question is the same color as another card, it shares a color with that card. If they have the same value, they share a value."
+Suppress / Suppressed,Suprimir / Suprimido,抑制する / 抑制された,"When a card is suppressed, its value drops to [0] for as long as the card is suppressed. This does apply to cards that gain value due to elements in the game. For instance, Sadness is worth [2] for each card in your discard pile. If suppressed, its value is [0] regardless of how many cards are in the discard pile. Some cards are suppressed for the turn, while some are suppressed for as long as the card that suppressed them remains in play. When a card is suppressed, you turn it sideways to remind you that it is suppressed. Suppressed cards are still in play and still count for cards that care about certain qualities existing. For example, a card that cares about blue cards in play will still count a suppressed blue card."
+Top Right Corner,Esquina superior derecha,右上のさいころ,This is referring to the die which is the main value of the card.
+Total value [number],Valor total [número],合計点数[数字],"This is the combined value of any number of cards that are equal to or less than the stated number. For example, Anger puts any number of cards with a total value of [5] into the discard pile. Four cards with the values of [2], [2], [1], and [0] have a total value of [5]."
+Turn,Turno,番,The period during which one person plays cards. Each player gets one turn each round.
+Turn Order,Orden de turnos,順番,The order at which players would take their turn in a round basically going in clockwise order.
+Value,Valor,点数,This is how much a card is worth when you count its score. Cards only have a value while in play.
+Win / Won a Round,Ganar / Ganó una ronda,ラウンドに勝つ / ラウンドに勝った,"The player with the highest score. If two players are tied, the player who played earlier that round."
